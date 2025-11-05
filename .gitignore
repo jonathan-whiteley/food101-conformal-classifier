@@ -121,3 +121,5 @@ Long_README.md
 
 examples/
 old_notebooks/
+
+.cursor/
