@@ -1,0 +1,26 @@
+# Food101 Conformal Prediction - Notebook Dependencies
+# Pin versions for reproducibility across environments
+
+# Core ML and Transformers
+transformers==4.46.3
+datasets==3.1.0
+torch==2.5.1
+torchvision==0.20.1
+accelerate==1.1.1
+
+# MLflow and Model Registry
+mlflow==2.18.0
+
+# Image Processing
+pillow==11.0.0
+
+# Data Science
+numpy==1.26.4
+pandas==2.2.3
+scikit-learn==1.5.2
+
+# Visualization
+matplotlib==3.9.2
+
+# Note: Databricks SDK is pre-installed in Databricks Runtime
+# databricks-sdk>=0.17.0 (if running outside Databricks)
