@@ -5,7 +5,7 @@ A production-ready implementation of conformal prediction for food image classif
 **Key Innovation: Adaptive Prediction Sets**
 Unlike traditional classifiers that output a single prediction, this model generates *adaptive prediction sets* that grow or shrink based on uncertainty. High-confidence predictions yield small sets (1-2 classes), while uncertain predictions expand to include more plausible options (up to 6 classes), all while maintaining a rigorous 90% coverage guarantee.
 
-![Food101 Conformal Prediction Examples](images/food101_3_classes.png)
+![Food101 Conformal Prediction Examples](assets/images/food101_3_classes.png)
 
 *Three examples showing conformal prediction with 90% coverage guarantee. **Left (High Confidence):** Clean breakfast burrito image produces a single-class prediction set. **Center (Medium Confidence):** More ambiguous image yields 3 possible classes. **Right (Low Confidence):** Difficult image requires 6 classes to maintain 90% coverage. The prediction set size adapts automatically based on model uncertainty.*
 
@@ -166,8 +166,9 @@ food101_conformal_prod/
 ├── requirements.txt               # Pinned Python dependencies
 ├── requirements-app.txt           # Gradio app dependencies
 ├── app.py                         # Gradio interface (optional)
-├── images/
-│   └── food101_3_classes.png     # Example predictions
+├── assets/
+│   └── images/
+│       └── food101_3_classes.png # Example predictions
 ├── DEPLOYMENT_SUMMARY.md          # Deployment guide
 ├── GRADIO_APP_GUIDE.md           # Gradio app instructions
 └── README.md                      # This file
