@@ -1,6 +1,9 @@
 # Food101 Conformal Prediction on Databricks
 
-A production-ready implementation of conformal prediction for food image classification using Vision Transformer (ViT) on the Food101 dataset.
+A production-ready implementation of conformal prediction for food image classification using Vision Transformer (ViT) on the Food101 dataset. This project implements RAPS (Regularized Adaptive Prediction Sets) to provide uncertainty-aware predictions with statistical coverage guarantees.
+
+**Key Innovation: Adaptive Prediction Sets**
+Unlike traditional classifiers that output a single prediction, this model generates *adaptive prediction sets* that grow or shrink based on uncertainty. High-confidence predictions yield small sets (1-2 classes), while uncertain predictions expand to include more plausible options (up to 6 classes), all while maintaining a rigorous 90% coverage guarantee.
 
 ![Food101 Conformal Prediction Examples](images/food101_3_classes.png)
 
@@ -12,7 +15,7 @@ This project demonstrates **uncertainty quantification** for deep learning image
 
 **What makes this different from standard classification?**
 - Standard models: "I predict this is a breakfast burrito (97.9% confidence)"
-- Conformal prediction: "I guarantee with 90% probability the true label is in this set: {breakfast_burrito}"
+- Conformal prediction: "I guarantee with 90% probability the true label is in this set: {breakfast_burrito, tacos, huevos_rancheros}"
 
 The prediction set size adapts based on model uncertainty - confident predictions get smaller sets, uncertain predictions get larger sets.
 
@@ -32,6 +35,8 @@ Fine-tunes a Vision Transformer (ViT) model on the Food101 dataset and registers
 
 **Requirements:**
 - Databricks cluster with GPU (recommended for training)
+  - Option 1: [Serverless GPU compute](https://docs.databricks.com/aws/en/compute/serverless/gpu) (fastest setup - no cluster config needed)
+  - Option 2: GPU cluster with ML runtime (g4dn.xlarge or larger)
 - Unity Catalog enabled workspace
 - Food101 dataset in Delta table format
 
@@ -45,7 +50,7 @@ Fine-tunes a Vision Transformer (ViT) model on the Food101 dataset and registers
 
 ---
 
-### [02-Conformal-Wrapper.ipynb](02-Conformal-Wrapper.ipynb)
+### [002-Conformal-Wrapper.ipynb](002-Conformal-Wrapper.ipynb)
 
 Wraps the base classifier with conformal prediction using RAPS (Regularized Adaptive Prediction Sets).
 
@@ -78,7 +83,9 @@ Wraps the base classifier with conformal prediction using RAPS (Regularized Adap
 ```bash
 # Databricks Runtime 13.0+ with ML support
 # Python 3.10+
-# GPU recommended for notebook 01 (training)
+# GPU recommended for notebook 01 (training):
+#   - Serverless GPU compute (recommended - zero setup)
+#   - OR GPU cluster (g4dn.xlarge or larger)
 ```
 
 ### Installation
@@ -102,20 +109,20 @@ Wraps the base classifier with conformal prediction using RAPS (Regularized Adap
 **Step 1: Fine-tune the base model**
 ```
 Open: 01-Fine-Tune-CV-Model.ipynb
-Run all cells (takes ~30-40 minutes with GPU)
+Run all cells (takes ~20-25 minutes with GPU)
 Output: Trained ViT model in Unity Catalog
 ```
 
 **Step 2: Add conformal prediction**
 ```
-Open: 02-Conformal-Wrapper.ipynb
+Open: 002-Conformal-Wrapper.ipynb
 Run all cells (takes ~10-15 minutes)
 Output: Conformal model with prediction sets
 ```
 
 **Step 3: Deploy to production** (optional)
 ```
-Last cell in notebook 02 creates a Model Serving endpoint
+Last cell in notebook 002 creates a Model Serving endpoint
 Test via REST API or Gradio interface
 ```
 
@@ -125,7 +132,7 @@ Test via REST API or Gradio interface
 
 ### Model Architecture
 - **Base:** Vision Transformer (google/vit-base-patch16-224-in21k)
-- **Fine-tuning:** 8 epochs, learning rate 2e-4, batch size 8
+- **Fine-tuning:** 5 epochs, learning rate 2e-4, batch size 8
 - **Performance:** 84.5% top-1 accuracy on Food101 test set
 
 ### Conformal Prediction
@@ -157,7 +164,7 @@ See [requirements.txt](requirements.txt) for complete dependency list.
 ```
 food101_conformal_prod/
 ├── 01-Fine-Tune-CV-Model.ipynb    # Fine-tune Vision Transformer
-├── 02-Conformal-Wrapper.ipynb     # Add conformal prediction
+├── 002-Conformal-Wrapper.ipynb    # Add conformal prediction
 ├── requirements.txt               # Pinned Python dependencies
 ├── requirements-app.txt           # Gradio app dependencies
 ├── app.py                         # Gradio interface (optional)

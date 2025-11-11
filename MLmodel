@@ -1,0 +1,29 @@
+artifact_path: conformal_model
+databricks_runtime: client.3.6
+flavors:
+  python_function:
+    cloudpickle_version: 3.0.0
+    code: null
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pyfunc.model
+    python_model: python_model.pkl
+    python_version: 3.12.3
+    streamable: false
+is_signature_from_type_hint: false
+mlflow_version: 2.21.3
+model_size_bytes: 343616889
+model_uuid: 83537d66b9ae4969bacaff67480f7715
+prompts: null
+run_id: 2c9b99c789114634962910ab4e6ea1cb
+signature:
+  inputs: '[{"type": "binary", "name": "image_bytes", "required": true}]'
+  outputs: '[{"type": "array", "items": {"type": "string"}, "name": "prediction_set",
+    "required": true}, {"type": "array", "items": {"type": "double"}, "name": "prediction_scores",
+    "required": true}, {"type": "long", "name": "set_size", "required": true}, {"type":
+    "string", "name": "top_prediction", "required": true}, {"type": "double", "name":
+    "top_score", "required": true}]'
+  params: null
+type_hint_from_example: false
+utc_time_created: '2025-11-11 19:25:24.215621'
