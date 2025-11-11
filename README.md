@@ -50,7 +50,7 @@ Fine-tunes a Vision Transformer (ViT) model on the Food101 dataset and registers
 
 ---
 
-### [002-Conformal-Wrapper.ipynb](002-Conformal-Wrapper.ipynb)
+### [02-Conformal-Model.ipynb](02-Conformal-Model.ipynb)
 
 Wraps the base classifier with conformal prediction using RAPS (Regularized Adaptive Prediction Sets).
 
@@ -90,19 +90,17 @@ Wraps the base classifier with conformal prediction using RAPS (Regularized Adap
 
 ### Installation
 
-1. **Clone this repository**
-   ```bash
-   git clone https://github.com/yourusername/food101_conformal_prod.git
-   ```
+1. **Clone this repository directly into Databricks**
+   - Open your Databricks workspace
+   - Navigate to Repos in the left sidebar
+   - Click "Add Repo" or "Create Repo"
+   - Enter the repository URL: `https://github.com/yourusername/food101_conformal_prod.git`
+   - Click "Create Repo"
 
-2. **Install dependencies** (outside Databricks)
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Upload to Databricks Workspace**
-   - Import notebooks to your Databricks workspace
-   - Attach to a cluster with ML runtime
+2. **Attach to a cluster**
+   - Open either notebook
+   - Attach to a cluster with ML runtime (GPU recommended for notebook 01)
+   - Dependencies will be installed automatically via `%pip install` commands in the notebooks
 
 ### Running the Notebooks
 
@@ -115,14 +113,14 @@ Output: Trained ViT model in Unity Catalog
 
 **Step 2: Add conformal prediction**
 ```
-Open: 002-Conformal-Wrapper.ipynb
+Open: 02-Conformal-Model.ipynb
 Run all cells (takes ~10-15 minutes)
 Output: Conformal model with prediction sets
 ```
 
 **Step 3: Deploy to production** (optional)
 ```
-Last cell in notebook 002 creates a Model Serving endpoint
+Last cell in notebook 02 creates a Model Serving endpoint
 Test via REST API or Gradio interface
 ```
 
@@ -164,7 +162,7 @@ See [requirements.txt](requirements.txt) for complete dependency list.
 ```
 food101_conformal_prod/
 ├── 01-Fine-Tune-CV-Model.ipynb    # Fine-tune Vision Transformer
-├── 002-Conformal-Wrapper.ipynb    # Add conformal prediction
+├── 02-Conformal-Model.ipynb       # Add conformal prediction
 ├── requirements.txt               # Pinned Python dependencies
 ├── requirements-app.txt           # Gradio app dependencies
 ├── app.py                         # Gradio interface (optional)
