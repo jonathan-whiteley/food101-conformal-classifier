@@ -9,15 +9,110 @@ Unlike traditional classifiers that output a single prediction, this model gener
 
 *Three examples showing conformal prediction with 90% coverage guarantee. **Left (High Confidence):** Clean breakfast burrito image produces a single-class prediction set. **Center (Medium Confidence):** More ambiguous image yields 3 possible classes. **Right (Low Confidence):** Difficult image requires 6 classes to maintain 90% coverage. The prediction set size adapts automatically based on model uncertainty.*
 
+---
+
 ## Overview
 
-This project demonstrates **uncertainty quantification** for deep learning image classification using conformal prediction. Instead of just returning a single prediction, the model returns **prediction sets** with statistical coverage guarantees.
+This project demonstrates **uncertainty quantification** for deep learning image classification using conformal prediction. Instead of forcing the model to commit to a single prediction, this approach returns **prediction sets** — multiple plausible classes that come with rigorous statistical guarantees about correctness.
 
-**What makes this different from standard classification?**
-- Standard models: "I predict this is a breakfast burrito (97.9% confidence)"
-- Conformal prediction: "I guarantee with 90% probability the true label is in this set: {breakfast_burrito, tacos, huevos_rancheros}"
+### Why Conformal Prediction?
 
-The prediction set size adapts based on model uncertainty - confident predictions get smaller sets, uncertain predictions get larger sets.
+Traditional classifiers face a fundamental limitation: they must always choose one answer, even when multiple options are equally plausible. Conformal prediction solves this by being honest about uncertainty.
+
+**Standard Classification:**
+- Forces a single prediction: "This is a breakfast burrito (97.9% confidence)"
+- Confidence scores can be misleading and uncalibrated
+- No guarantees about how often predictions are correct
+
+**Conformal Prediction:**
+- Returns flexible prediction sets: "The true label is in {breakfast_burrito, tacos, huevos_rancheros} with 90% confidence"
+- Provides mathematical coverage guarantees that hold regardless of model or data distribution
+- Adapts set size to uncertainty: confident predictions → small sets (1-2 classes), uncertain predictions → larger sets (3-6 classes)
+
+This approach is particularly valuable in high-stakes applications like medical diagnosis, food safety, or quality control where knowing when the model is uncertain is as important as the prediction itself.
+
+---
+
+## Understanding the Results
+
+The image at the top shows three prediction examples that demonstrate how prediction sets adapt to model confidence:
+
+| Confidence Level | Set Size | Interpretation |
+|-----------------|----------|----------------|
+| **High** (1-2 classes) | 1 | Strong evidence for one class - the model can confidently exclude all other options |
+| **Medium** (3-5 classes) | 3 | Ambiguous features suggest multiple legitimate candidates - honest uncertainty |
+| **Low** (6+ classes) | 6 | Insufficient evidence to narrow down - could be out-of-distribution or genuinely difficult |
+
+### What Does "90% Coverage" Mean?
+
+The coverage guarantee is the key insight: **across many predictions, at least 90% of the prediction sets will contain the true label.**
+
+This is fundamentally different from traditional "confidence scores":
+- ❌ Traditional: "90% confident this is class A" (no calibration guarantee)
+- ✅ Conformal: "90% of my prediction sets include the correct answer" (mathematically guaranteed)
+
+The model adapts its honesty: when uncertain, it returns larger sets rather than guessing. This transparency allows downstream decisions to account for uncertainty appropriately.
+
+---
+
+## Key Benefits
+
+- ✅ **Statistical guarantees** - 90% coverage provably maintained
+- ✅ **Uncertainty quantification** - Know when the model is uncertain
+- ✅ **Distribution-free** - No assumptions about data distribution
+- ✅ **Model-agnostic** - Works with any classifier
+- ✅ **Production-ready** - Deployed on Databricks Model Serving
+- ✅ **Reproducible** - Pinned dependencies and MLflow tracking
+
+---
+
+## Quick Start
+
+### Prerequisites
+
+```bash
+# Databricks Runtime 13.0+ with ML support
+# Python 3.10+
+# GPU recommended for notebook 01 (training):
+#   - Serverless GPU compute (recommended - zero setup)
+#   - OR GPU cluster (g4dn.xlarge or larger)
+```
+
+### Installation
+
+1. **Clone this repository directly into Databricks**
+   - Open your Databricks workspace
+   - Navigate to Repos in the left sidebar
+   - Click "Add Repo" or "Create Repo"
+   - Enter the repository URL: `https://github.com/yourusername/food101_conformal_prod.git`
+   - Click "Create Repo"
+
+2. **Attach to a cluster**
+   - Open either notebook
+   - Attach to a cluster with ML runtime (GPU recommended for notebook 01)
+   - Dependencies will be installed automatically via `%pip install` commands in the notebooks
+
+### Running the Notebooks
+
+**Step 1: Fine-tune the base model**
+```
+Open: 01-Fine-Tune-CV-Model.ipynb
+Run all cells (takes ~20-25 minutes with GPU)
+Output: Trained ViT model in Unity Catalog
+```
+
+**Step 2: Add conformal prediction**
+```
+Open: 02-Conformal-Model.ipynb
+Run all cells (takes ~10-15 minutes)
+Output: Conformal model with prediction sets
+```
+
+**Step 3: Deploy to production** (optional)
+```
+Last cell in notebook 02 creates a Model Serving endpoint
+Test via REST API
+```
 
 ---
 
@@ -76,62 +171,15 @@ Wraps the base classifier with conformal prediction using RAPS (Regularized Adap
 
 ---
 
-## Quick Start
-
-### Prerequisites
-
-```bash
-# Databricks Runtime 13.0+ with ML support
-# Python 3.10+
-# GPU recommended for notebook 01 (training):
-#   - Serverless GPU compute (recommended - zero setup)
-#   - OR GPU cluster (g4dn.xlarge or larger)
-```
-
-### Installation
-
-1. **Clone this repository directly into Databricks**
-   - Open your Databricks workspace
-   - Navigate to Repos in the left sidebar
-   - Click "Add Repo" or "Create Repo"
-   - Enter the repository URL: `https://github.com/yourusername/food101_conformal_prod.git`
-   - Click "Create Repo"
-
-2. **Attach to a cluster**
-   - Open either notebook
-   - Attach to a cluster with ML runtime (GPU recommended for notebook 01)
-   - Dependencies will be installed automatically via `%pip install` commands in the notebooks
-
-### Running the Notebooks
-
-**Step 1: Fine-tune the base model**
-```
-Open: 01-Fine-Tune-CV-Model.ipynb
-Run all cells (takes ~20-25 minutes with GPU)
-Output: Trained ViT model in Unity Catalog
-```
-
-**Step 2: Add conformal prediction**
-```
-Open: 02-Conformal-Model.ipynb
-Run all cells (takes ~10-15 minutes)
-Output: Conformal model with prediction sets
-```
-
-**Step 3: Deploy to production** (optional)
-```
-Last cell in notebook 02 creates a Model Serving endpoint
-Test via REST API or Gradio interface
-```
-
----
-
 ## Technical Details
 
 ### Model Architecture
-- **Base:** Vision Transformer (google/vit-base-patch16-224-in21k)
+- **Base Model:** Vision Transformer (google/vit-base-patch16-224-in21k)
+- **Dataset:** nateraw/food101 (101 food categories)
 - **Fine-tuning:** 5 epochs, learning rate 2e-4, batch size 8
-- **Performance:** 84.5% top-1 accuracy on Food101 test set
+- **Evaluation Results:**
+  - **Accuracy:** 84.53%
+  - **Loss:** 0.6771
 
 ### Conformal Prediction
 - **Algorithm:** RAPS (Regularized Adaptive Prediction Sets)
@@ -164,40 +212,14 @@ food101_conformal_prod/
 ├── 01-Fine-Tune-CV-Model.ipynb    # Fine-tune Vision Transformer
 ├── 02-Conformal-Model.ipynb       # Add conformal prediction
 ├── requirements.txt               # Pinned Python dependencies
-├── requirements-app.txt           # Gradio app dependencies
-├── app.py                         # Gradio interface (optional)
 ├── assets/
-│   └── images/
-│       └── food101_3_classes.png # Example predictions
-├── DEPLOYMENT_SUMMARY.md          # Deployment guide
-├── GRADIO_APP_GUIDE.md           # Gradio app instructions
+│   ├── images/
+│   │   ├── food101_3_classes.png # Example prediction sets
+│   │   ├── food101_plots.png     # Training metrics
+│   │   └── image.jpg             # Test image for API or App
+│   └── MLmodel                   # MLflow model metadata
 └── README.md                      # This file
 ```
-
----
-
-## Key Benefits
-
-✅ **Statistical guarantees** - 90% coverage provably maintained
-✅ **Uncertainty quantification** - Know when the model is uncertain
-✅ **Distribution-free** - No assumptions about data distribution
-✅ **Model-agnostic** - Works with any classifier
-✅ **Production-ready** - Deployed on Databricks Model Serving
-✅ **Reproducible** - Pinned dependencies and MLflow tracking
-
----
-
-## Understanding the Results
-
-The image at the top shows three prediction examples:
-
-| Confidence Level | Set Size | Interpretation |
-|-----------------|----------|----------------|
-| **High** (1-2 classes) | 1 | Model is very confident - clear features match one class |
-| **Medium** (3-5 classes) | 3 | Model sees ambiguous features - multiple plausible answers |
-| **Low** (6+ classes) | 6 | Model is uncertain - image is difficult or out-of-distribution |
-
-The 90% coverage guarantee means: **across many predictions, at least 90% of the prediction sets will contain the true label.**
 
 ---
 
@@ -250,3 +272,6 @@ Contributions welcome! Please:
 
 For bugs or feature requests, open an issue on GitHub.
 
+---
+
+**Built with ❤️ using Databricks, PyTorch, Hugging Face Transformers, and MLflow**
