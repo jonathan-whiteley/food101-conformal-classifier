@@ -1,68 +1,71 @@
 # Food101 Conformal Prediction on Databricks
 
-A production-ready implementation of conformal prediction for food image classification using Vision Transformer (ViT) on the Food101 dataset. This project implements RAPS (Regularized Adaptive Prediction Sets) to provide uncertainty-aware predictions with statistical coverage guarantees.
+A production-ready implementation of conformal prediction for food image classification using Vision Transformer (ViT) on the Food101 dataset.
 
-**Key Innovation: Adaptive Prediction Sets**
-Unlike traditional classifiers that output a single prediction, this model generates *adaptive prediction sets* that grow or shrink based on uncertainty. High-confidence predictions yield small sets (1-2 classes), while uncertain predictions expand to include more plausible options (up to 6 classes), all while maintaining a rigorous 90% coverage guarantee.
+**Adaptive Prediction Sets:**
+Unlike traditional classifiers that output a single prediction, this implementation of a conformal classification model generates prediction sets that adapt based on uncertainty. All predictions maintain a 90% coverage guarantee, while offering a model-agnostic, distribution-free way to communicate uncertainty to stakeholders.
+
+This is valuable in high-stakes applications where knowing when the model is uncertain matters as much as the prediction itself.
 
 ![Food101 Conformal Prediction Examples](assets/images/food101_3_classes.png)
 
-*Three examples showing conformal prediction with 90% coverage guarantee. **Left (High Confidence):** Clean breakfast burrito image produces a single-class prediction set. **Center (Medium Confidence):** More ambiguous image yields 3 possible classes. **Right (Low Confidence):** Difficult image requires 6 classes to maintain 90% coverage. The prediction set size adapts automatically based on model uncertainty.*
-
----
-
-## Overview
-
-This project demonstrates **uncertainty quantification** for deep learning image classification using conformal prediction. Instead of forcing the model to commit to a single prediction, this approach returns **prediction sets** — multiple plausible classes that come with rigorous statistical guarantees about correctness.
-
-### Why Conformal Prediction?
-
-Traditional classifiers face a fundamental limitation: they must always choose one answer, even when multiple options are equally plausible. Conformal prediction solves this by being honest about uncertainty.
-
-**Standard Classification:**
-- Forces a single prediction: "This is a breakfast burrito (97.9% confidence)"
-- Confidence scores can be misleading and uncalibrated
-- No guarantees about how often predictions are correct
-
-**Conformal Prediction:**
-- Returns flexible prediction sets: "The true label is in {breakfast_burrito, tacos, huevos_rancheros} with 90% confidence"
-- Provides mathematical coverage guarantees that hold regardless of model or data distribution
-- Adapts set size to uncertainty: confident predictions → small sets (1-2 classes), uncertain predictions → larger sets (3-6 classes)
-
-This approach is particularly valuable in high-stakes applications like medical diagnosis, food safety, or quality control where knowing when the model is uncertain is as important as the prediction itself.
-
----
-
-## Understanding the Results
-
-The image at the top shows three prediction examples that demonstrate how prediction sets adapt to model confidence:
-
-| Confidence Level | Set Size | Interpretation |
-|-----------------|----------|----------------|
-| **High** (1-2 classes) | 1 | Strong evidence for one class - the model can confidently exclude all other options |
-| **Medium** (3-5 classes) | 3 | Ambiguous features suggest multiple legitimate candidates - honest uncertainty |
-| **Low** (6+ classes) | 6 | Insufficient evidence to narrow down - could be out-of-distribution or genuinely difficult |
-
-### What Does "90% Coverage" Mean?
-
-The coverage guarantee is the key insight: **across many predictions, at least 90% of the prediction sets will contain the true label.**
-
-This is fundamentally different from traditional "confidence scores":
-- ❌ Traditional: "90% confident this is class A" (no calibration guarantee)
-- ✅ Conformal: "90% of my prediction sets include the correct answer" (mathematically guaranteed)
-
-The model adapts its honesty: when uncertain, it returns larger sets rather than guessing. This transparency allows downstream decisions to account for uncertainty appropriately.
+*Three examples showing conformal prediction with 90% coverage guarantee:*
+- **Left (High Confidence):** Clean breakfast burrito image produces a single-class prediction set
+- **Center (Medium Confidence):** More ambiguous image yields 3 possible classes
+- **Right (Low Confidence):** Difficult image requires 6 classes to maintain 90% coverage
 
 ---
 
 ## Key Benefits
 
-- ✅ **Statistical guarantees** - 90% coverage provably maintained
+- ✅ **Statistical guarantees** - 90% coverage guarantee maintained across all predictions
 - ✅ **Uncertainty quantification** - Know when the model is uncertain
 - ✅ **Distribution-free** - No assumptions about data distribution
 - ✅ **Model-agnostic** - Works with any classifier
 - ✅ **Production-ready** - Deployed on Databricks Model Serving
 - ✅ **Reproducible** - Pinned dependencies and MLflow tracking
+
+---
+
+## Demo
+
+See the conformal prediction model in action! This [Databricks App](https://github.com/jonathan-whiteley/food101-cv-app) calls the Model Serving endpoint created in 02-Conformal-Model.ipynb to provide real-time classification of food images with uncertainty quantification.
+
+![Food101 App Demo](assets/Food101_app_demo.gif)
+
+*The app demonstrates how prediction sets adapt in real-time: confident predictions return 1-2 classes, while uncertain images return larger sets to maintain the 90% coverage guarantee.*
+
+---
+
+## ML Stack
+
+This project leverages the complete Databricks Data Intelligence Platform:
+
+- **Data Management**: Hugging Face Food101 dataset loaded into Unity Catalog as Delta tables
+- **Model Training**: Hugging Face Vision Transformer (ViT) fine-tuned on Databricks Serverless GPUs
+- **Experiment Tracking**: MLflow for model versioning, metrics tracking, and reproducibility
+- **Model Registry**: Unity Catalog for centralized model governance and lineage
+- **Conformal Prediction**: RAPS (Regularized Adaptive Prediction Sets) implementation with PyFunc custom models
+- **Deployment**: Databricks Model Serving with REST API endpoints for real-time inference
+- **Applications**: Databricks Apps for interactive web interfaces with uncertainty visualization
+
+---
+
+## Understanding the Results
+
+Prediction set size adapts based on model confidence. RAPS (Regularized Adaptive Prediction Sets) applies a penalty to discourage overly large sets, keeping predictions informative:
+
+| Set Size | Example | What This Means |
+|----------|---------|-----------------|
+| **1-2 classes** (High confidence) | breakfast_burrito | Model has strong evidence for one class |
+| **3-4 classes** (Medium confidence) | {breakfast_burrito, tacos, huevos_rancheros} | Multiple classes are plausible — the model is hedging between similar options |
+| **5-6 classes** (Low confidence) | {breakfast_burrito, tacos, falafel, takoyaki, huevos_rancheros, samosa} | Model cannot distinguish between many options — high uncertainty |
+
+### The 90% Coverage Guarantee
+
+**Across all predictions, at least 90% of the prediction sets contain the true label.** This guarantee is calibrated using held-out data and holds regardless of data distribution or model architecture.
+
+This is fundamentally different from traditional confidence scores, which are often miscalibrated and provide no formal guarantees.
 
 ---
 
@@ -217,9 +220,45 @@ food101_conformal_prod/
 │   │   ├── food101_3_classes.png # Example prediction sets
 │   │   ├── food101_plots.png     # Training metrics
 │   │   └── image.jpg             # Test image for API or App
+│   ├── Food101_app_demo.gif      # Demo app animation
 │   └── MLmodel                   # MLflow model metadata
 └── README.md                      # This file
 ```
+
+---
+
+## Business Value & Applications
+
+### Food Industry Use Cases
+
+Conformal prediction provides actionable uncertainty quantification for critical food industry applications:
+
+**Quick Service Restaurants (QSR)**
+- **Menu compliance verification**: Detect when delivered items don't match customer orders with confidence-aware alerts
+- **Drive-thru quality control**: Flag uncertain predictions (large sets) for human review before order completion
+- **Kitchen automation**: Route ambiguous items to specialized stations when the model indicates low confidence
+
+**Full-Service Restaurants & Hospitality**
+- **Dietary restriction monitoring**: Ensure accurate allergen identification — large prediction sets trigger manual verification
+- **Plating consistency**: Monitor food presentation quality across shifts with uncertainty-aware scoring
+- **Inventory management**: Track menu item preparation with confidence metrics to identify training opportunities
+
+**Travel & Tourism**
+- **Food discovery apps**: Help travelers identify unfamiliar cuisines with transparency about uncertainty
+- **Content moderation**: Flag user-submitted food photos that require manual review (low confidence predictions)
+- **Menu translation**: Provide multiple plausible dish identifications when visual context is ambiguous
+
+### Why Conformal Prediction Matters
+
+Traditional models force a single prediction even when uncertain, leading to:
+- ❌ False confidence in incorrect classifications
+- ❌ Missed opportunities to request human verification
+- ❌ Inability to adapt decision thresholds based on business risk
+
+Conformal prediction enables **risk-aware decision making**:
+- ✅ Route uncertain predictions (large sets) to human review
+- ✅ Accept confident predictions (1-2 classes) for full automation
+- ✅ Maintain verifiable service level agreements (90% coverage guarantee)
 
 ---
 
